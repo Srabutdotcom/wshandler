@@ -1,15 +1,8 @@
 //import { modules } from "../lib.js";
-import { userData } from '../database/user/user.js';
-import {
+import { blobify, 
    bufferToBase64URLString, base64url_to_string,
-   decoder
-} from '../aids/mod.js';
-import { blobify } from '../blobify/src/mod.js';
-/* const bufferToBase64URLString = await modules.getModule('bufferToBase64URLString')
-const base64url_to_string = await modules.getModule('base64url_to_string')
-const decoder = await modules.getModule('decoder')
-const blobify = await modules.getModule('blobify')
- */
+   decoder, userData } from './deps.js';
+
 function isIdNotEqToRawId(id, rawId) {
    return bufferToBase64URLString(rawId) !== id
 }

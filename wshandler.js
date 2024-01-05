@@ -1,5 +1,5 @@
 import { handleSignUp } from "./handlesignup.js";
-import { parseBlob } from "../blobify/src/parseblob.js";
+import { parseBlob } from "./deps.js";
 
 class HandleWs {
    handler = {};
