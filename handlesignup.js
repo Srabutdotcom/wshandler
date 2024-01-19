@@ -1,42 +1,41 @@
 //import { modules } from "../lib.js";
-import { blobify, 
+import {
+   blobify,
    bufferToBase64URLString, base64url_to_string,
-   decoder, userData } from './deps.js';
+   decoder, userData
+} from './deps.js';
 
 function isIdNotEqToRawId(id, rawId) {
    return bufferToBase64URLString(rawId) !== id
 }
 
-function isChallengeNotMatch(base64url_challenge, sendBlob) {
+function isChallengeNotMatch(base64url_challenge) {
    const challenge = base64url_to_string(base64url_challenge);
    const expectedChallenge = sessionStorage.getItem('session')
-   //return base64url_to_string(base64url_challenge) !== sessionStorage.getItem('session')
-   sendBlob({
-      success: false,
-      message: `Unexpected authentication response challenge "${challenge}", expected "${expectedChallenge}"`
-   })
+   return challenge !== expectedChallenge;
 }
 
 export async function handleSignUp(data, sock) {
    function sendBlob(data) {
-      sock.send(blobify(data))
+      sock.send(blobify(data));
+      return;
    }
    const {
       name, id, rawId, type,
       authenticatorAttachment,
       response: attestationResponse } = data;
 
-   if (!id) sendBlob({
+   if (!id) return sendBlob({
       success: false,
       message: 'Missing credential ID'
    })
 
-   if (isIdNotEqToRawId(id, rawId)) sendBlob({
+   if (isIdNotEqToRawId(id, rawId)) return sendBlob({
       success: false,
       message: 'Credential ID is not equal to raw ID'
    })
 
-   if (type !== 'public-key') sendBlob({
+   if (type !== 'public-key') return sendBlob({
       success: false,
       message: `Unexpected credential type ${type}, expected "public-key"`
    })
@@ -47,12 +46,15 @@ export async function handleSignUp(data, sock) {
    const clientData = JSON.parse(clientDataJSON);
    const { type: webauthType, challenge: base64url_challenge, origin, tokenBinding } = clientData;
 
-   if (webauthType !== 'webauthn.create') sendBlob({
+   if (webauthType !== 'webauthn.create') return sendBlob({
       success: false,
       message: `Unexpected authentication webauthn type: ${webauthType}, expected "webauthn.create"`
    })
 
-   isChallengeNotMatch(base64url_challenge, sendBlob)
+   if (isChallengeNotMatch(base64url_challenge)) return sendBlob({
+      success: false,
+      message: `Unexpected authentication response challenge "${challenge}", expected "${expectedChallenge}"`
+   })
 
    const _userData = {
       name, id, rawId, type,
@@ -64,10 +66,10 @@ export async function handleSignUp(data, sock) {
    debugger;
    const session = sessionStorage.getItem('session');
    sessionStorage.setItem(session, id)// to keep track user login data
-   sock.send(blobify({
+   return sock.send(blobify({
       status: 'success',
       message: `${name} is successfully registered`,
-      data : {
+      data: {
          name, id
       }
    }))
